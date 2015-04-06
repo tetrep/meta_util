@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+undef $/;
+#$_=<>;
+
+my $gateways = "";
+while (`netstat -rn` =~ /(default[^\S\n]+(([0-9.])+)[^\S\n]+[^\n]*\n)/g) {
+  $gateways .= $&;
+}
+
+my $ifconfig =`ifconfig`;
+while ($ifconfig =~ /([a-zA-Z0-9]+)(: [^\n]+?\n)([^\S\n]+)(.+?\n)((\g3.+?\n)*)/g) {
+  my $interface_name = $1;
+  my $interface_data = $5;
+  # we want to print gateways
+  my $gateway = "nope";
+  if ($gateways =~ /([0-9.]+).*$interface_name/) {
+    $gateway = $1;
+  }
+  # we only want to print an interface if it has an ip address
+  if ($interface_data =~ /(inet6? (.+?))[ %]/g) {
+    print $interface_name;
+    # print gateway if we have it
+    if (not $gateway eq "nope") {
+      print " - ",$gateway;
+    }
+    print "\n";
+    print "  ",$1,"\n";
+    while ($interface_data =~ /(inet6? (.+?))[ %]/g) {
+      print "  ",$1,"\n";
+    }
+  }
+}
