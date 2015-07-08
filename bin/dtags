@@ -1,3 +1,16 @@
 #!/bin/bash
 
-find * -type d -exec 'cd {} && ctags *;'
+if [ -z "${1}" ]; then
+  # we use recursion because find -exec sucks ass
+  find . -type d -not -path '*/.*' -exec dtags {} \;
+else
+  # change directory
+  cd "${1}" && 
+  # find files
+  files=$(find . -type f -maxdepth 1 -not -name '.*')
+  # only ctags if we have found files
+  if [ ! -z "${files}" ]; then
+    # we use find again because files might have spaces
+    find . -type f -maxdepth 1 -not -name '.*' -exec ctags -f .tags {} +
+  fi
+fi
